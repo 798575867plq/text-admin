@@ -2,7 +2,7 @@
   <div class="all-box">
     <div class="login-box">
       <div>
-        <h1>幻影未来后台管理系统</h1>
+        <h1 style="color:#fff">幻影未来后台管理系统</h1>
       </div>
       <el-form
         :rules="rules"
@@ -11,10 +11,10 @@
         label-width="100px"
         class="demo-ruleForm"
       >
-        <el-form-item prop="account">
+        <el-form-item prop="username">
           <el-input
             prefix-icon="el-icon-user-solid"
-            v-model="loginQuery.account"
+            v-model="loginQuery.username"
             placeholder="请输入内容"
           ></el-input>
         </el-form-item>
@@ -27,7 +27,12 @@
           ></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button class="login-btn" type="primary" @click="submitForm('ruleForm')">登录</el-button>
+          <el-button
+            class="login-btn"
+            type="primary"
+            :loading="isLoading"
+            @click="submitForm('ruleForm')"
+          >登录</el-button>
         </el-form-item>
       </el-form>
       <div></div>
@@ -40,31 +45,43 @@ export default {
   data() {
     return {
       rules: {
-        account: [{ required: true, message: "请输入用户名", trigger: "blur" }],
+        username: [
+          { required: true, message: "请输入用户名", trigger: "blur" },
+        ],
         password: [
           { required: true, message: "请输入密码", trigger: "blur" },
-          { min: 6, message: "请输入不少于6位的密码", trigger: "blur" }
-        ]
+          { min: 6, message: "请输入不少于6位的密码", trigger: "blur" },
+        ],
       },
       loginQuery: {
-        account: "",
-        password: ""
-      }
+        username: "admin",
+        password: "123456",
+      },
+      isLoading: false,
     };
   },
   methods: {
     submitForm(formName) {
-      this.$refs[formName].validate(valid => {
+      this.$refs[formName].validate((valid) => {
+        this.isLoading = true;
         if (valid) {
-          this.$router.replace({ path: "/" });
-          this.$refs[formName].resetFields();
+          this.$store
+            .dispatch("user/login", this.loginQuery)
+            .then((res) => {
+              this.isLoading = false;
+              this.$router.push({ path: "/home" });
+              this.$refs[formName].resetFields();
+            })
+            .catch(() => {
+              this.isLoading = false;
+            });
         } else {
-          console.log("error submit!!");
+          this.isLoading = false;
           return false;
         }
       });
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -81,8 +98,8 @@ export default {
   height: 100%;
   color: #ffffff;
   .login-box {
-    width: 420px;
-    margin-top: 200px;
+    width: 380px;
+    margin-top: 220px;
     div {
       margin-top: 20px;
     }

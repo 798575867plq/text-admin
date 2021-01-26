@@ -1,69 +1,89 @@
-import { asyncRoutes, constantRoutes } from '@/router'
+import { asyncRouterMap, constantRouterMap } from "@/router";
 
 /**
- * Use meta.role to determine if the current user has permission
- * @param roles
+ * 通过meta.permissions判断是否与当前用户权限匹配
+ * @param permissions
  * @param route
  */
-function hasPermission(roles, route) {
-  if (route.meta && route.meta.roles) {
-    return roles.some(role => route.meta.roles.includes(role))
+function hasPermission(permissions, route) {
+  if (process.env.VUE_APP_PERMISSION_DEBUG === "true") {
+    //权限校验不生效
+    return true;
+  }
+  if (route.meta && route.meta.permissions) {
+    return permissions.some(permission =>
+      route.meta.permissions.includes(permission)
+    );
   } else {
-    return true
+    return true;
   }
 }
 
 /**
- * Filter asynchronous routing tables by recursion
- * @param routes asyncRoutes
- * @param roles
+ * 递归过滤异步路由表，返回符合用户角色权限的路由表
+ * @param routes asyncRouterMap
+ * @param permissions   后台给的
  */
-export function filterAsyncRoutes(routes, roles) {
-  const res = []
+function filterAsyncRouter(routes, permissions) {
+  // const res = [];
+  // routes.forEach(route => {
+  //   const tmp = { ...route };
+  //   if (hasPermission(permissions, tmp)) {
+  //     if (tmp.children) {
+  //       tmp.children = filterAsyncRouter(tmp.children, permissions);
+  //     }
+  //     res.push(tmp);
+  //   }
+  // });
+  // // console.log(res, "ajsxbkasbx ")
+  // return res;
 
-  routes.forEach(route => {
-    const tmp = { ...route }
-    if (hasPermission(roles, tmp)) {
-      if (tmp.children) {
-        tmp.children = filterAsyncRoutes(tmp.children, roles)
-      }
-      res.push(tmp)
+
+  let arr = [];
+  routes.forEach((element) => {
+    // 保留hidden的路由
+    if (element.hidden) {
+      arr.push(element)
     }
-  })
-
-  return res
-}
-
-const state = {
-  routes: [],
-  addRoutes: []
-}
-
-const mutations = {
-  SET_ROUTES: (state, routes) => {
-    state.addRoutes = routes
-    state.routes = constantRoutes.concat(routes)
-  }
-}
-
-const actions = {
-  generateRoutes({ commit }, roles) {
-    return new Promise(resolve => {
-      let accessedRoutes
-      if (roles.includes('admin')) {
-        accessedRoutes = asyncRoutes || []
-      } else {
-        accessedRoutes = filterAsyncRoutes(asyncRoutes, roles)
+    permissions.forEach((item) => {
+      if (element.meta && element.meta.title == item.menu_name) {
+        let obj = Object.assign(element);
+        if (item.childNodeList) {
+          obj.children = filterAsyncRouter(element.children, item.childNodeList);
+        }
+        arr.push(obj);
       }
-      commit('SET_ROUTES', accessedRoutes)
-      resolve(accessedRoutes)
-    })
-  }
+    });
+  });
+
+  return arr;
 }
 
-export default {
+const permission = {
   namespaced: true,
-  state,
-  mutations,
-  actions
-}
+  state: {
+    routers: constantRouterMap,
+    addRouters: []
+  },
+  mutations: {
+    SET_ROUTERS: (state, routers) => {
+      state.addRouters = routers;
+      state.routers = constantRouterMap.concat(routers);
+    }
+  },
+  actions: {
+    GenerateRoutes({ commit }, data) {
+      return new Promise(resolve => {
+        const { permissions } = data;
+        console.log(permissions, "后台给的")
+        let accessedRouters;
+        accessedRouters = filterAsyncRouter(asyncRouterMap, permissions);
+        console.log(accessedRouters, "结果")
+        commit("SET_ROUTERS", accessedRouters);
+        resolve();
+      });
+    }
+  }
+};
+
+export default permission;

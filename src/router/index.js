@@ -1,30 +1,68 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-// import Home from "../views/Home.vue";
-
-import Layout from '../views/layout'
 
 Vue.use(VueRouter);
 
-const routes = [
-  {
-    path: "/",
-    redirect: "/layout/index",
-  },
+import Layout from '../views/layout/index'
+
+
+export const constantRouterMap = [
   {
     path: "/login",
-    name: "login",
-    component: () =>
-      import("@/views/login/index.vue")
+    component: resolve => require(["@/views/login/index"], resolve),
+    hidden: true
   },
   {
-    path: "/layout/index",
-    name: "layout",
+    path: "/",
+    redirect: "/home",
     component: Layout,
+  },
+  // {
+  //   path: "/layout/index",
+  //   name: "layout",
+  //   component: Layout,
+  // },
+  // {
+  //   path: "/home",
+  //   name: "home",
+  //   component: Layout,
+  // },
+  {
+    path: "/404",
+    component: resolve => require(["@/views/404"], resolve),
+    hidden: true
+  },]
+
+
+/**
+* 需要判断权限的路由
+*/
+export const asyncRouterMap = [
+  {
+    path: "/home",
+    name: "home",
+    component: Layout,
+    redirect: "/home/index",
+    // meta: {
+    //   title: '首页'
+    // },
+    hidden: true,
+    children: [
+      {
+        path: 'index',
+        component: () =>
+          import("@/views/home/index.vue"),
+        name: 'index',
+        meta: {
+          title: '首页'
+        },
+      }
+    ]
   },
   {
     path: "/userManage",
     name: "userManage",
+    redirect: "/userManage/userList",
     component: Layout,
     meta: {
       title: '用户管理'
@@ -33,12 +71,34 @@ const routes = [
       {
         path: 'userList',
         component: () =>
-          import("@/views/userManage/userList.vue"),
+          import("@/views/userManage/userList/userList.vue"),
         name: 'userList',
         meta: {
           title: '用户列表'
-        }
+        },
+        children: [
+          {
+            path: 'userDetail',
+            component: () =>
+              import("@/views/userManage/userList/component/userDetail.vue"),
+            name: 'userDetail',
+            meta: {
+              title: '个人详情'
+            },
+            hidden: true
+          },
+        ]
       },
+      // {
+      //   path: 'userList/component/userDetail',
+      //   component: () =>
+      //     import("@/views/userManage/userList/component/userDetail.vue"),
+      //   name: 'userDetail',
+      //   meta: {
+      //     title: '个人详情'
+      //   },
+      //   hidden: true
+      // },
       {
         path: 'rechargeRecord',
         component: () =>
@@ -63,8 +123,10 @@ const routes = [
     path: "/plotManage",
     name: "plotManage",
     component: Layout,
+    redirect: "/plotManage/plotList",
     meta: {
-      title: '剧情管理'
+      title: '剧情管理',
+      permissions: ["plotManage"]
     },
     children: [
       {
@@ -76,12 +138,23 @@ const routes = [
           title: '剧情列表'
         }
       },
+      {
+        path: 'addPlot',
+        component: () =>
+          import("@/views/plotManage/addPlot.vue"),
+        name: 'addPlot',
+        meta: {
+          title: '添加剧情'
+        },
+        hidden: true
+      },
     ]
   },
   {
     path: "/auditManage",
     name: "auditManage",
     component: Layout,
+    redirect: "/auditManage/actorCertification",
     meta: {
       title: '审核管理'
     },
@@ -96,6 +169,16 @@ const routes = [
         }
       },
       {
+        path: 'actordetails',
+        component: () =>
+          import("@/views/auditManage/component/actordetails.vue"),
+        name: 'actordetails',
+        meta: {
+          title: '演员认证-演员详情'
+        },
+        hidden: true
+      },
+      {
         path: 'plotCertification',
         component: () =>
           import("@/views/auditManage/plotCertification.vue"),
@@ -103,6 +186,16 @@ const routes = [
         meta: {
           title: '剧情认证'
         }
+      },
+      {
+        path: 'reviewdetails',
+        component: () =>
+          import("@/views/auditManage/component/reviewdetails.vue"),
+        name: 'reviewdetails',
+        meta: {
+          title: '剧情认证-评审详情'
+        },
+        hidden: true
       },
       {
         path: 'actorProfileReview',
@@ -120,7 +213,17 @@ const routes = [
         name: 'userAvatarReview',
         meta: {
           title: '用户头像审核'
-        }
+        },
+      },
+      {
+        path: 'userAvatarReview/myTaskForImg',
+        component: () =>
+          import("@/views/auditManage/component/myTaskForImg.vue"),
+        name: 'myTaskForImg',
+        meta: {
+          title: '用户头像审核-我的任务'
+        },
+        hidden: true
       },
       {
         path: 'userVoiceReview',
@@ -173,6 +276,7 @@ const routes = [
     path: "/knowledgeManage",
     name: "knowledgeManage",
     component: Layout,
+    redirect: "/knowledgeManage/generalTopic",
     meta: {
       title: '知识库管理'
     },
@@ -201,6 +305,7 @@ const routes = [
     path: "/businessMonitor",
     name: "businessMonitor",
     component: Layout,
+    redirect: "/businessMonitor/avatarList",
     meta: {
       title: '业务监控'
     },
@@ -242,6 +347,16 @@ const routes = [
         }
       },
       {
+        path: 'monitorDetail',
+        component: () =>
+          import("@/views/businessMonitor/component/monitorDetail.vue"),
+        name: 'monitorDetail',
+        meta: {
+          title: '监控详情'
+        },
+        hidden: true
+      },
+      {
         path: 'greetingList',
         component: () =>
           import("@/views/businessMonitor/greetingList.vue"),
@@ -277,11 +392,21 @@ const routes = [
           title: '评价列表'
         }
       },
+      {
+        path: 'signatureList',
+        component: () =>
+          import("@/views/businessMonitor/signatureList.vue"),
+        name: 'signatureList',
+        meta: {
+          title: '个性签名列表'
+        }
+      },
     ]
   },
   {
     path: "/operationManage",
     name: "operationManage",
+    redirect: "/operationManage/couponManage",
     component: Layout,
     meta: {
       title: '运营管理'
@@ -296,6 +421,16 @@ const routes = [
           title: '优惠劵管理'
         }
       },
+      {
+        path: 'couponeditor',
+        component: () =>
+          import("@/views/operationManage/couponeditor.vue"),
+        name: 'couponeditor',
+        meta: {
+          title: '编辑页'
+        },
+        hidden: true
+      },
     ]
   },
 
@@ -303,31 +438,56 @@ const routes = [
     path: "/authorityManage",
     name: "authorityManage",
     component: Layout,
+    redirect: "/authorityManage/index",
     meta: {
       title: '权限管理'
     },
     children: [
       {
-        path: 'index',
+        path: 'userManage',
         component: () =>
-          import("@/views/authorityManage/index.vue"),
-        name: 'authTree',
+          import("@/views/authorityManage/userManage.vue"),
+        name: 'userManageTree',
         meta: {
-          title: '权限树'
+          title: '用户权限管理'
+        }
+      },
+      {
+        path: 'roleManage',
+        component: () =>
+          import("@/views/authorityManage/roleManage.vue"),
+        name: 'roleManage',
+        meta: {
+          title: '角色管理'
         }
       },
     ]
   },
-
   {
     path: "*",
-    component: resolve => require(["@/views/404"], resolve),
+    redirect: "/404",
     hidden: true
   },
+
+  // {
+  //   path: "*",
+  //   component: resolve => require(["@/views/404"], resolve),
+  //   hidden: true
+  // },
 ];
 
-const router = new VueRouter({
-  routes
+
+// 解决ElementUI导航栏中的vue-router在3.0版本以上重复点菜单报错问题
+const originalPush = VueRouter.prototype.push
+VueRouter.prototype.push = function push(location) {
+  return originalPush.call(this, location).catch(err => err)
+}
+
+export default new VueRouter({
+  // mode: 'history', //后端支持可开
+  scrollBehavior: () => ({
+    y: 0
+  }),
+  routes: constantRouterMap
 });
 
-export default router;
